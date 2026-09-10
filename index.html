@@ -267,6 +267,9 @@ Conectando ao Supabase...
 <button id="loginBtn" class="primary">
 Entrar
 </button>
+<button id="forgotPasswordBtn" type="button">
+🔑 Esqueci minha senha
+</button>
 </div>
 
 <p class="small">
@@ -1103,7 +1106,56 @@ return true;
 
 }
 
+$("forgotPasswordBtn").onclick =
+async function(){
 
+    const email =
+        $("email").value.trim();
+
+    if(!email){
+
+        status(
+            $("loginStatus"),
+            "Digite seu e-mail para recuperar a senha.",
+            "err"
+        );
+
+        return;
+    }
+
+    status(
+        $("loginStatus"),
+        "Enviando e-mail de recuperação...",
+        "ok"
+    );
+
+    const {error} =
+        await db.auth.resetPasswordForEmail(
+            email,
+            {
+                redirectTo:
+                    window.location.origin +
+                    window.location.pathname
+            }
+        );
+
+    if(error){
+
+        status(
+            $("loginStatus"),
+            "Erro: " + error.message,
+            "err"
+        );
+
+        return;
+    }
+
+    status(
+        $("loginStatus"),
+        "E-mail de recuperação enviado. Verifique sua caixa de entrada.",
+        "ok"
+    );
+};
 $("loginBtn").onclick =
 async function(){
 
