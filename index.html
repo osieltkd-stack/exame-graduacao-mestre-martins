@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Academia Mestre Martins - Exame de Graduação 2026</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f3f4f6;
+    color:#111827;
+}
+
+header{
+    background:#111827;
+    color:white;
+    padding:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+header h1{
+    margin:0;
+    font-size:21px;
+}
+
+header p{
+    margin:5px 0 0;
+    color:#d1d5db;
+    font-size:13px;
+}
+
+main{
+    max-width:1100px;
+    margin:25px auto;
+    padding:0 15px;
+}
+
+.card{
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    padding:22px;
+    margin-bottom:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,.05);
+}
+
+.login{
+    max-width:430px;
+    margin:70px auto;
+}
+
+h2,h3{
+    margin-top:0;
+}
+
+label{
+    display:block;
+    margin:13px 0 6px;
+    font-size:13px;
+    font-weight:bold;
+}
+
+input,select{
+    width:100%;
+    padding:12px;
+    border:1px solid #cbd5e1;
+    border-radius:9px;
+    font-size:15px;
+}
+
+button{
+    border:0;
+    border-radius:9px;
+    padding:11px 16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.primary{
+    background:#d4a72c;
+    color:#111827;
+}
+
+.secondary{
+    background:#e5e7eb;
+    color:#111827;
+}
+
+.danger{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:17px;
+}
+
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+}
+
+.status{
+    padding:11px;
+    border-radius:9px;
+    background:#f3f4f6;
+    color:#374151;
+    font-size:13px;
+}
+
+.status.ok{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status.err{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+.badge{
+    background:#dcfce7;
+    color:#166534;
+    padding:7px 12px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.group{
+    margin-top:18px;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    overflow:hidden;
+}
+
+.group-title{
+    background:#f8fafc;
+    padding:14px;
+    font-weight:bold;
+    display:flex;
+    justify-content:space-between;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:11px;
+    border-top:1px solid #e5e7eb;
+    text-align:left;
+    font-size:14px;
+}
+
+th{
+    font-size:11px;
+    color:#6b7280;
+    text-transform:uppercase;
+}
+
+.small{
+    font-size:12px;
+    color:#6b7280;
+}
+
+.hidden{
+    display:none!important;
+}
+
+@media(max-width:700px){
+    .row{
+        grid-template-columns:1fr;
+    }
+
+    header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:10px;
+    }
+
+    table,thead,tbody,tr,td{
+        display:block;
+    }
+
+    thead{
+        display:none;
+    }
+
+    tr{
+        border-top:1px solid #e5e7eb;
+        padding:8px 0;
+    }
+
+    td{
+        border:0;
+        padding:6px 12px;
+    }
+
+    td:before{
+        content:attr(data-label);
+        display:block;
+        font-size:10px;
+        color:#6b7280;
+        font-weight:bold;
+        text-transform:uppercase;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div>
+<h1>🥋 Academia Mestre Martins de Taekwondo</h1>
+<p>Exame de Graduação 2026 • Painel do Mestre</p>
+</div>
+
+<button id="logoutBtn" class="secondary hidden">Sair</button>
+</header>
+
+<main>
+
+<!-- LOGIN -->
+<section id="loginCard" class="card login">
+
+<h2>Entrar no sistema</h2>
+
+<div id="loginStatus" class="status">
+Conectando ao Supabase...
+</div>
+
+<label>E-mail</label>
+<input id="email"
+       type="email"
+       value="osieltkd@gmail.com"
+       autocomplete="username">
+
+<label>Senha</label>
+<input id="password"
+       type="password"
+       autocomplete="current-password">
+
+<div class="actions">
+<button id="loginBtn" class="primary">
+Entrar
+</button>
+</div>
+
+<p class="small">
+Acesso restrito ao administrador da Academia Mestre Martins.
+</p>
+
+</section>
+
+
+<!-- RECUPERAÇÃO -->
+<section id="recoveryCard" class="card login hidden">
+
+<h2>Criar nova senha</h2>
+
+<div id="recoveryStatus" class="status">
+Defina uma nova senha.
+</div>
+
+<label>Nova senha</label>
+<input id="newPassword"
+       type="password"
+       autocomplete="new-password">
+
+<label>Confirmar nova senha</label>
+<input id="newPassword2"
+       type="password"
+       autocomplete="new-password">
+
+<div class="actions">
+<button id="updatePasswordBtn" class="primary">
+Salvar nova senha
+</button>
+</div>
+
+</section>
+
+
+<!-- SISTEMA -->
+<section id="app" class="hidden">
+
+<div class="card">
+
+<div class="toolbar">
+
+<div>
+<h2>Cadastro de alunos</h2>
+<div id="examInfo" class="small"></div>
+</div>
+
+<span id="connectionBadge" class="badge">
+🟢 Supabase conectado
+</span>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3 id="formTitle">
+Adicionar aluno
+</h3>
+
+<div id="appStatus" class="status">
+Pronto.
+</div>
+
+<div class="row">
+
+<div>
+
+<label>Nome completo</label>
+
+<input id="name"
+       type="text"
+       placeholder="Nome do aluno">
+
+</div>
+
+<div>
+
+<label>GUB atual</label>
+
+<select id="currentGrade"></select>
+
+</div>
+
+</div>
+
+
+<div class="row">
+
+<div>
+
+<label>Graduação pretendida</label>
+
+<input id="targetGrade"
+       type="text"
+       readonly>
+
+</div>
+
+<div>
+
+<label>Status</label>
+
+<input type="text"
+       value="Ativo no exame"
+       readonly>
+
+</div>
+
+</div>
+
+
+<div class="actions">
+
+<button id="saveBtn" class="primary">
+Salvar aluno
+</button>
+
+<button id="cancelBtn"
+        class="secondary hidden">
+Cancelar edição
+</button>
+
+<button id="refreshBtn"
+        class="secondary">
+Atualizar lista
+</button>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<div class="toolbar">
+
+<h2>Alunos por GUB</h2>
+
+<span id="count" class="small"></span>
+
+</div>
+
+<div id="groups"></div>
+
+</div>
+
+</section>
+
+</main>
+
+
+<script>
+
+const SUPABASE_URL =
+"https://ijunvddtlglqdcmbljxp.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_rv8A9m2KIyxopxpVZ4lb2Q_vC9w2u17";
+
+const db =
+supabase.createClient(
+SUPABASE_URL,
+SUPABASE_KEY
+);
+
+
+const grades = [
+
+"10º GUB - Faixa Branca",
+
+"9º GUB - Faixa Cinza Kids",
+
+"8º GUB - Faixa Amarela",
+
+"7º GUB - Faixa Laranja",
+
+"6º GUB - Faixa Verde Clara",
+
+"5º GUB - Faixa Verde Escura",
+
+"4º GUB - Faixa Azul Clara",
+
+"3º GUB - Faixa Azul Escura",
+
+"2º GUB - Faixa Vermelha Clara",
+
+"1º GUB - Faixa Vermelha Escura"
+
+];
+
+
+let exam = null;
+
+let candidates = [];
+
+let editingId = null;
+
+
+function $(id){
+return document.getElementById(id);
+}
+
+
+function status(element,message,type=""){
+element.textContent = message;
+element.className =
+"status" + (type ? " "+type : "");
+}
+
+
+function targetFor(grade){
+
+const index =
+grades.indexOf(grade);
+
+if(index >= 0 &&
+index < grades.length-1){
+
+return grades[index+1];
+
+}
+
+return "";
+
+}
+
+
+function fillGrades(){
+
+$("currentGrade").innerHTML =
+grades.map(g =>
+`<option value="${g}">${g}</option>`
+).join("");
+
+updateTarget();
+
+}
+
+
+function updateTarget(){
+
+$("targetGrade").value =
+targetFor($("currentGrade").value);
+
+}
+
+
+async function loadExam(){
+
+const {data,error} =
+await db
+.from("exams")
+.select("*")
+.eq("name","Exame de Graduação 2026")
+.single();
+
+if(error) throw error;
+
+exam = data;
+
+$("examInfo").textContent =
+`${exam.name} • ${exam.year} • ${exam.location || ""}`;
+
+}
+
+
+async function loadCandidates(){
+
+const {data,error} =
+await db
+.from("candidates")
+.select("*")
+.eq("exam_id",exam.id)
+.eq("active",true)
+.order("current_grade")
+.order("full_name");
+
+if(error) throw error;
+
+candidates = data || [];
+
+renderGroups();
+
+}
+
+
+function escapeHtml(text){
+
+return String(text || "")
+.replace(/[&<>"']/g,function(c){
+
+return {
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#039;"
+}[c];
+
+});
+
+}
+
+
+function renderGroups(){
+
+$("count").textContent =
+`${candidates.length} aluno(s)`;
+
+if(!candidates.length){
+
+$("groups").innerHTML =
+`<div class="small">
+Nenhum aluno cadastrado neste exame.
+</div>`;
+
+return;
+
+}
+
+
+const grouped = {};
+
+candidates.forEach(c=>{
+
+if(!grouped[c.current_grade])
+grouped[c.current_grade] = [];
+
+grouped[c.current_grade].push(c);
+
+});
+
+
+$("groups").innerHTML =
+
+grades
+.filter(g =>
+grouped[g] &&
+grouped[g].length
+)
+.map(g=>{
+
+const rows =
+grouped[g].map((c,i)=>`
+
+<tr>
+
+<td data-label="Ordem">
+${i+1}
+</td>
+
+<td data-label="Nome">
+<b>${escapeHtml(c.full_name)}</b>
+</td>
+
+<td data-label="GUB atual">
+${escapeHtml(c.current_grade)}
+</td>
+
+<td data-label="Próxima graduação">
+${escapeHtml(c.target_grade)}
+</td>
+
+<td data-label="Ações">
+
+<button
+class="secondary"
+onclick="editCandidate('${c.id}')">
+Editar
+</button>
+
+<button
+class="danger"
+onclick="removeCandidate('${c.id}')">
+Remover
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
+
+
+return `
+
+<div class="group">
+
+<div class="group-title">
+
+<span>
+${escapeHtml(g)}
+</span>
+
+<span>
+${grouped[g].length} aluno(s)
+</span>
+
+</div>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Ordem</th>
+<th>Nome</th>
+<th>GUB atual</th>
+<th>Próxima graduação</th>
+<th>Ações</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+${rows}
+
+</tbody>
+
+</table>
+
+</div>
+
+`;
+
+}).join("");
+
+}
+
+
+window.editCandidate =
+function(id){
+
+const candidate =
+candidates.find(c=>c.id===id);
+
+if(!candidate) return;
+
+editingId = id;
+
+$("formTitle").textContent =
+"Editar aluno";
+
+$("name").value =
+candidate.full_name;
+
+$("currentGrade").value =
+candidate.current_grade;
+
+updateTarget();
+
+$("cancelBtn")
+.classList.remove("hidden");
+
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
+
+};
+
+
+window.removeCandidate =
+async function(id){
+
+const candidate =
+candidates.find(c=>c.id===id);
+
+if(!candidate) return;
+
+if(!confirm(
+`Remover ${candidate.full_name} da lista do exame?`
+)) return;
+
+status(
+$("appStatus"),
+"Removendo aluno..."
+);
+
+const {error} =
+await db
+.from("candidates")
+.update({
+active:false,
+updated_at:new Date().toISOString()
+})
+.eq("id",id);
+
+if(error){
+
+status(
+$("appStatus"),
+"Erro: "+error.message,
+"err"
+);
+
+return;
+
+}
+
+status(
+$("appStatus"),
+"Aluno removido com sucesso.",
+"ok"
+);
+
+await loadCandidates();
+
+};
+
+
+function resetForm(){
+
+editingId = null;
+
+$("formTitle").textContent =
+"Adicionar aluno";
+
+$("name").value = "";
+
+$("currentGrade").selectedIndex = 0;
+
+updateTarget();
+
+$("cancelBtn")
+.classList.add("hidden");
+
+}
+
+
+async function saveCandidate(){
+
+const name =
+$("name").value.trim();
+
+const current =
+$("currentGrade").value;
+
+const target =
+targetFor(current);
+
+
+if(!name){
+
+status(
+$("appStatus"),
+"Informe o nome do aluno.",
+"err"
+);
+
+return;
+
+}
+
+
+if(!target){
+
+status(
+$("appStatus"),
+"Este GUB não possui próxima graduação.",
+"err"
+);
+
+return;
+
+}
+
+
+$("saveBtn").disabled = true;
+
+
+status(
+$("appStatus"),
+editingId ?
+"Salvando alterações..." :
+"Cadastrando aluno..."
+);
+
+
+let result;
+
+
+if(editingId){
+
+result =
+await db
+.from("candidates")
+.update({
+
+full_name:name,
+
+current_grade:current,
+
+target_grade:target,
+
+updated_at:
+new Date().toISOString()
+
+})
+.eq("id",editingId);
+
+}else{
+
+result =
+await db
+.from("candidates")
+.insert({
+
+exam_id:exam.id,
+
+full_name:name,
+
+current_grade:current,
+
+target_grade:target,
+
+active:true
+
+});
+
+}
+
+
+$("saveBtn").disabled = false;
+
+
+if(result.error){
+
+status(
+$("appStatus"),
+"Erro ao salvar: "+
+result.error.message,
+"err"
+);
+
+return;
+
+}
+
+
+status(
+$("appStatus"),
+editingId ?
+"Aluno atualizado com sucesso." :
+"Aluno cadastrado com sucesso.",
+"ok"
+);
+
+
+resetForm();
+
+await loadCandidates();
+
+}
+
+
+async function startApp(session){
+
+try{
+
+const {data:profile,error} =
+await db
+.from("profiles")
+.select("full_name,role,active")
+.eq("id",session.user.id)
+.single();
+
+
+if(error) throw error;
+
+
+if(profile.role !== "admin" ||
+!profile.active){
+
+throw new Error(
+"Este usuário não possui permissão de administrador."
+);
+
+}
+
+
+await loadExam();
+
+await loadCandidates();
+
+
+$("loginCard")
+.classList.add("hidden");
+
+$("recoveryCard")
+.classList.add("hidden");
+
+$("app")
+.classList.remove("hidden");
+
+$("logoutBtn")
+.classList.remove("hidden");
+
+
+}catch(error){
+
+await db.auth.signOut();
+
+status(
+$("loginStatus"),
+"Não foi possível abrir o painel: "+
+error.message,
+"err"
+);
+
+}
+
+}
+
+
+async function handleRecovery(){
+
+const hash =
+window.location.hash || "";
+
+if(!/type=recovery/i.test(hash))
+return false;
+
+
+$("loginCard")
+.classList.add("hidden");
+
+$("recoveryCard")
+.classList.remove("hidden");
+
+
+status(
+$("recoveryStatus"),
+"Link recebido. Crie sua nova senha."
+);
+
+
+$("updatePasswordBtn").onclick =
+async function(){
+
+const p1 =
+$("newPassword").value;
+
+const p2 =
+$("newPassword2").value;
+
+
+if(p1.length < 6){
+
+status(
+$("recoveryStatus"),
+"A senha deve ter pelo menos 6 caracteres.",
+"err"
+);
+
+return;
+
+}
+
+
+if(p1 !== p2){
+
+status(
+$("recoveryStatus"),
+"As senhas não conferem.",
+"err"
+);
+
+return;
+
+}
+
+
+$("updatePasswordBtn").disabled = true;
+
+
+status(
+$("recoveryStatus"),
+"Salvando nova senha..."
+);
+
+
+const {error} =
+await db.auth.updateUser({
+password:p1
+});
+
+
+$("updatePasswordBtn").disabled = false;
+
+
+if(error){
+
+status(
+$("recoveryStatus"),
+"Erro: "+error.message,
+"err"
+);
+
+return;
+
+}
+
+
+status(
+$("recoveryStatus"),
+"Senha alterada com sucesso. Agora entre no sistema.",
+"ok"
+);
+
+
+setTimeout(
+function(){
+
+window.location.hash = "";
+
+location.reload();
+
+},
+1500
+);
+
+};
+
+return true;
+
+}
+
+
+$("loginBtn").onclick =
+async function(){
+
+const email =
+$("email").value.trim();
+
+const password =
+$("password").value;
+
+
+if(!email || !password){
+
+status(
+$("loginStatus"),
+"Informe e-mail e senha.",
+"err"
+);
+
+return;
+
+}
+
+
+$("loginBtn").disabled = true;
+
+
+status(
+$("loginStatus"),
+"Entrando..."
+);
+
+
+const {data,error} =
+await db.auth.signInWithPassword({
+
+email:email,
+
+password:password
+
+});
+
+
+$("loginBtn").disabled = false;
+
+
+if(error){
+
+status(
+$("loginStatus"),
+"Login não realizado: "+
+error.message,
+"err"
+);
+
+return;
+
+}
+
+
+await startApp(data.session);
+
+};
+
+
+$("password").addEventListener(
+"keydown",
+function(e){
+
+if(e.key === "Enter")
+$("loginBtn").click();
+
+});
+
+
+$("currentGrade").onchange =
+updateTarget;
+
+
+$("saveBtn").onclick =
+saveCandidate;
+
+
+$("cancelBtn").onclick =
+resetForm;
+
+
+$("refreshBtn").onclick =
+async function(){
+
+status(
+$("appStatus"),
+"Atualizando..."
+);
+
+try{
+
+await loadCandidates();
+
+status(
+$("appStatus"),
+"Lista atualizada.",
+"ok"
+);
+
+}catch(error){
+
+status(
+$("appStatus"),
+"Erro: "+error.message,
+"err"
+);
+
+}
+
+};
+
+
+$("logoutBtn").onclick =
+async function(){
+
+await db.auth.signOut();
+
+location.reload();
+
+};
+
+
+(async function(){
+
+fillGrades();
+
+const recovery =
+await handleRecovery();
+
+if(recovery) return;
+
+
+const {data:{session}} =
+await db.auth.getSession();
+
+
+if(session){
+
+await startApp(session);
+
+}else{
+
+status(
+$("loginStatus"),
+"Supabase pronto. Faça o login.",
+"ok"
+);
+
+}
+
+})();
+
+</script>
+
+</body>
+</html>
