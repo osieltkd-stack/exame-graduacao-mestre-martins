@@ -612,9 +612,159 @@ if(error) throw error;
 candidates = data || [];
 
 renderGroups();
+async function loadCandidates(){
+    ...
+}
+    
+}
+async function loadEvaluatorCandidates(){
+
+    const {data,error} =
+        await db
+        .from("candidates")
+        .select("id,full_name,current_grade")
+        .eq("exam_id",exam.id)
+        .eq("active",true)
+        .order("current_grade")
+        .order("full_name");
+
+    if(error) throw error;
+
+    const evaluatorCandidates = data || [];
+
+    if(!evaluatorCandidates.length){
+
+        $("evaluatorCandidates").innerHTML =
+            `<div class="status">
+                Nenhum aluno cadastrado neste exame.
+            </div>`;
+
+        return;
+    }
+
+    $("evaluatorCandidates").innerHTML = `
+        <div style="overflow-x:auto">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>ORDEM</th>
+                        <th>NOME</th>
+                        <th>GUB ATUAL</th>
+                        <th>KIBON DONJAK</th>
+                        <th>BALKISUL</th>
+                        <th>MOVIMENTOS</th>
+                        <th>SEBON GYEORUGI</th>
+                        <th>GYEORUGI</th>
+                        <th>GYEOKPA</th>
+                        <th>TOTAL</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    ${evaluatorCandidates.map((student,index) => `
+
+                        <tr>
+
+                            <td>${index + 1}</td>
+
+                            <td>
+                                <strong>
+                                    ${escapeHtml(student.full_name)}
+                                </strong>
+                            </td>
+
+                            <td>
+                                ${escapeHtml(student.current_grade)}
+                            </td>
+
+                            <td>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="10"
+                                    step="0.1"
+                                    class="score-input"
+                                    data-candidate="${student.id}"
+                                    data-criterion="kibon">
+                            </td>
+
+                            <td>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="10"
+                                    step="0.1"
+                                    class="score-input"
+                                    data-candidate="${student.id}"
+                                    data-criterion="balkisul">
+                            </td>
+
+                            <td>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="10"
+                                    step="0.1"
+                                    class="score-input"
+                                    data-candidate="${student.id}"
+                                    data-criterion="movimentos">
+                            </td>
+
+                            <td>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="10"
+                                    step="0.1"
+                                    class="score-input"
+                                    data-candidate="${student.id}"
+                                    data-criterion="sebon">
+                            </td>
+
+                            <td>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="10"
+                                    step="0.1"
+                                    class="score-input"
+                                    data-candidate="${student.id}"
+                                    data-criterion="gyeorugi">
+                            </td>
+
+                            <td>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="10"
+                                    step="0.1"
+                                    class="score-input"
+                                    data-candidate="${student.id}"
+                                    data-criterion="gyeokpa">
+                            </td>
+
+                            <td>
+                                <strong
+                                    id="total-${student.id}">
+                                    0.0
+                                </strong>
+                            </td>
+
+                        </tr>
+
+                    `).join("")}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    `;
 
 }
-
 async function loadEvaluators(){
 
     const {data,error} =
@@ -1058,8 +1208,18 @@ if(profile.role !== "admin" && profile.role !== "evaluator"){
 
 await loadExam();
 
-await loadCandidates();
-await loadEvaluators();
+if(profile.role === "admin"){
+
+    await loadCandidates();
+    await loadEvaluators();
+
+}else if(profile.role === "evaluator"){
+
+    await loadEvaluatorCandidates();
+
+}
+
+
 
 $("loginCard")
 .classList.add("hidden");
