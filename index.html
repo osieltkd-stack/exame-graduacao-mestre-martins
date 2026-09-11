@@ -762,6 +762,39 @@ async function loadEvaluatorCandidates(){
         </div>
     `;
 
+    document
+.querySelectorAll(".score-input")
+.forEach(input => {
+
+    input.addEventListener("input", () => {
+
+        const candidateId =
+            input.dataset.candidate;
+
+        const inputs =
+            document.querySelectorAll(
+                `.score-input[data-candidate="${candidateId}"]`
+            );
+
+        let total = 0;
+
+        inputs.forEach(field => {
+            total += Number(field.value) || 0;
+        });
+
+        const totalElement =
+            document.getElementById(
+                `total-${candidateId}`
+            );
+
+        if(totalElement){
+            totalElement.textContent =
+                total.toFixed(1);
+        }
+
+    });
+
+});
 }
 async function loadEvaluators(){
 
