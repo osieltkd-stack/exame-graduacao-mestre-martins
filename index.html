@@ -805,6 +805,208 @@ async function loadEvaluatorCandidates(){
 
 });
 }
+   async function saveEvaluations(){
+
+    const button =
+        $("saveEvaluationsBtn");
+
+    button.disabled = true;
+    button.textContent = "💾 Salvando...";
+
+    try{
+
+        const {data:userData,error:userError} =
+            await db.auth.getUser();
+
+        if(userError) throw userError;
+
+        const evaluatorId =
+            userData.user.id;
+
+        const {data:criteriaData,error:criteriaError} =
+            await db
+            .from("criteria")
+            .select("id,name")
+            .eq("active",true)
+            .order("display_order");
+
+        if(criteriaError) throw criteriaError;
+
+        const criteriaMap = {};
+
+        criteriaData.forEach(c => {
+            criteriaMap[c.name] = c.id;
+        });
+
+        const criterionNames = {
+            kibon: "Kibon Donjak",
+            balkisul: "Balkisul",
+            movimentos: "Movimentos",
+            sebon: "Sebon Gyeorugi",
+            gyeorugi: "Gyeorugi",
+            gyeokpa: "Gyeokpa"
+        };
+
+        const inputs =
+            document.querySelectorAll(".score-input");
+
+        const candidatesIds = [
+            ...new Set(
+                [...inputs].map(
+                    input => input.dataset.candidate
+                )
+            )
+        ];
+
+        for(const candidateId of candidatesIds){
+
+            const candidateInputs =
+                document.querySelectorAll(
+                    `.score-input[data-candidate="${candidateId}"]`
+                );
+
+            for(const input of candidateInputs){
+
+                if(input.value === ""){
+                    throw new Error(
+                        "Preencha todas as notas antes de salvar."
+                    );
+                }
+
+                const score =
+                    Number(input.value);
+
+                if(score < 0 || score > 10){
+                    throw new Error(
+                        "As notas devem estar entre 0 e 10."
+                    );
+                }
+
+            }
+
+            const {data:existingEvaluation,error:findError} =
+                await db
+                .from("evaluations")
+                .select("id,status")
+                .eq("exam_id",exam.id)
+                .eq("candidate_id",candidateId)
+                .eq("evaluator_id",evaluatorId)
+                .maybeSingle();
+
+            if(findError) throw findError;
+
+            let evaluationId;
+
+            if(existingEvaluation){
+
+                evaluationId =
+                    existingEvaluation.id;
+
+            }else{
+
+                const {data:newEvaluation,error:newError} =
+                    await db
+                    .from("evaluations")
+                    .insert({
+                        exam_id:exam.id,
+                        candidate_id:candidateId,
+                        evaluator_id:evaluatorId,
+                        status:"draft"
+                    })
+                    .select("id")
+                    .single();
+
+                if(newError) throw newError;
+
+                evaluationId =
+                    newEvaluation.id;
+            }
+
+            for(const input of candidateInputs){
+
+                const criterionName =
+                    criterionNames[
+                        input.dataset.criterion
+                    ];
+
+                const criterionId =
+                    criteriaMap[criterionName];
+
+                if(!criterionId){
+                    throw new Error(
+                        "Critério não encontrado: " +
+                        criterionName
+                    );
+                }
+
+                const score =
+                    Number(input.value);
+
+                const {data:existingScore,error:scoreFindError} =
+                    await db
+                    .from("scores")
+                    .select("id")
+                    .eq("evaluation_id",evaluationId)
+                    .eq("criterion_id",criterionId)
+                    .maybeSingle();
+
+                if(scoreFindError) throw scoreFindError;
+
+                if(existingScore){
+
+                    const {error:updateError} =
+                        await db
+                        .from("scores")
+                        .update({
+                            score:score,
+                            updated_at:new Date().toISOString()
+                        })
+                        .eq("id",existingScore.id);
+
+                    if(updateError) throw updateError;
+
+                }else{
+
+                    const {error:insertError} =
+                        await db
+                        .from("scores")
+                        .insert({
+                            evaluation_id:evaluationId,
+                            criterion_id:criterionId,
+                            score:score
+                        });
+
+                    if(insertError) throw insertError;
+                }
+            }
+        }
+
+        button.textContent =
+            "✅ Avaliações salvas";
+
+        $("evaluatorInfo").textContent =
+            "Avaliações salvas com sucesso.";
+
+    }catch(error){
+
+        button.textContent =
+            "❌ Erro ao salvar";
+
+        $("evaluatorInfo").textContent =
+            "Erro ao salvar: " +
+            error.message;
+    }
+
+    setTimeout(() => {
+
+        button.disabled = false;
+
+        button.textContent =
+            "💾 Salvar Avaliações";
+
+    },3000);
+
+} 
 async function loadEvaluators(){
 
     const {data,error} =
@@ -1575,16 +1777,20 @@ $("appStatus"),
 }
 
 };
+    
+    $("saveEvaluationsBtn").onclick =
+    saveEvaluations;
+
+    $("logoutBtn").onclick =
+    async function(){
+
+        await db.auth.signOut();
+
+        location.reload();
+
+    };
 
 
-$("logoutBtn").onclick =
-async function(){
-
-await db.auth.signOut();
-
-location.reload();
-
-};
 
 
 (async function(){
