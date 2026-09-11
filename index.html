@@ -420,7 +420,28 @@ Atualizar lista
 <div id="groups"></div>
 
 </div>
+<div class="card">
 
+    <div class="toolbar">
+        <div>
+            <h2>👨‍⚖️ Examinadores da Banca</h2>
+            <div class="small">
+                Examinadores cadastrados para o Exame de Graduação 2026
+            </div>
+        </div>
+
+        <span id="evaluatorCount" class="small">
+            0 examinador(es)
+        </span>
+    </div>
+
+    <div id="evaluators">
+        <div class="status">
+            Carregando examinadores...
+        </div>
+    </div>
+
+</div>
 </section>
 
 </main>
@@ -560,8 +581,46 @@ renderGroups();
 
 }
 
+async function loadEvaluators(){
+
+    const {data,error} =
+        await db
+        .from("profiles")
+        .select("id,full_name,role,active")
+        .eq("role","evaluator")
+        .eq("active",true)
+        .order("full_name");
+
+    if(error) throw error;
+
+    const evaluators = data || [];
+
+    $("evaluatorCount").textContent =
+        `${evaluators.length} examinador(es)`;
+
+    if(!evaluators.length){
+
+        $("evaluators").innerHTML =
+            `<div class="status">
+                Nenhum examinador cadastrado.
+            </div>`;
+
+        return;
+    }
+
+    $("evaluators").innerHTML =
+        evaluators.map((evaluator,index) => `
+            <div class="group">
+                <div class="groupHead">
+                    <strong>${index + 1}. ${escapeHtml(evaluator.full_name)}</strong>
+                    <span class="badge">Examinador</span>
+                </div>
+            </div>
+        `).join("");
+}
 
 function escapeHtml(text){
+
 
 return String(text || "")
 .replace(/[&<>"']/g,function(c){
@@ -962,7 +1021,7 @@ throw new Error(
 await loadExam();
 
 await loadCandidates();
-
+await loadEvaluators();
 
 $("loginCard")
 .classList.add("hidden");
