@@ -1103,7 +1103,225 @@ async function loadEvaluators(){
             </div>
         `).join("");
 }
+async function loadAdminResults(){
 
+    const container = $("adminResults");
+
+    try{
+
+        const {data:candidates,error:candidatesError} =
+            await db
+            .from("candidates")
+            .select("id,name,current_gub")
+            .eq("exam_id",exam.id)
+            .order("name");
+
+        if(candidatesError) throw candidatesError;
+
+        if(!candidates || !candidates.length){
+
+            container.innerHTML =
+                `<div class="status">
+                    Nenhum aluno cadastrado.
+                </div>`;
+
+            return;
+        }
+
+        const {data:evaluations,error:evaluationsError} =
+            await db
+            .from("evaluations")
+            .select("id,candidate_id,evaluator_id,status")
+            .eq("exam_id",exam.id);
+
+        if(evaluationsError) throw evaluationsError;
+
+        const evaluationIds =
+            (evaluations || []).map(
+                evaluation => evaluation.id
+            );
+
+        let scores = [];
+
+        if(evaluationIds.length){
+
+            const {data:scoresData,error:scoresError} =
+                await db
+                .from("scores")
+                .select("evaluation_id,criterion_id,score")
+                .in("evaluation_id",evaluationIds);
+
+            if(scoresError) throw scoresError;
+
+            scores = scoresData || [];
+        }
+
+        const {data:criteriaData,error:criteriaError} =
+            await db
+            .from("criteria")
+            .select("id,name")
+            .eq("active",true)
+            .order("display_order");
+
+        if(criteriaError) throw criteriaError;
+
+        const criteriaMap = {};
+
+        (criteriaData || []).forEach(criterion => {
+
+            criteriaMap[criterion.id] =
+                criterion.name;
+
+        });
+
+        const scoresMap = {};
+
+        scores.forEach(score => {
+
+            if(!scoresMap[score.evaluation_id]){
+                scoresMap[score.evaluation_id] = {};
+            }
+
+            scoresMap[score.evaluation_id][
+                criteriaMap[score.criterion_id]
+            ] = score.score;
+
+        });
+
+        const criterionNames = [
+            "Kibon Dongjak",
+            "Balkisul",
+            "Movimentos",
+            "Sebon Gyeorugi",
+            "Gyeorugi",
+            "Gyeokpa"
+        ];
+
+        let html = `
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ORDEM</th>
+                            <th>NOME</th>
+                            <th>GUB ATUAL</th>
+                            <th>KIBON DONJAK</th>
+                            <th>BALKISUL</th>
+                            <th>MOVIMENTOS</th>
+                            <th>SEBON GYEORUGI</th>
+                            <th>GYEORUGI</th>
+                            <th>GYEOKPA</th>
+                            <th>TOTAL</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        candidates.forEach((candidate,index) => {
+
+            const evaluation =
+                (evaluations || []).find(
+                    item =>
+                        item.candidate_id === candidate.id
+                );
+
+            const candidateScores =
+                evaluation
+                    ? (scoresMap[evaluation.id] || {})
+                    : {};
+
+            let total = 0;
+            let complete = true;
+
+            criterionNames.forEach(criterionName => {
+
+                const value =
+                    candidateScores[criterionName];
+
+                if(value === undefined){
+
+                    complete = false;
+
+                }else{
+
+                    total += Number(value);
+
+                }
+
+            });
+
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+
+                    <td>
+                        <strong>
+                            ${escapeHtml(candidate.name)}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${escapeHtml(candidate.current_gub || "")}
+                    </td>
+            `;
+
+            criterionNames.forEach(criterionName => {
+
+                const value =
+                    candidateScores[criterionName];
+
+                html += `
+                    <td>
+                        ${
+                            value === undefined
+                                ? "-"
+                                : value
+                        }
+                    </td>
+                `;
+
+            });
+
+            html += `
+                    <td>
+                        <strong>
+                            ${complete ? total.toFixed(1) : "-"}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${
+                            complete
+                                ? '<span class="badge">Completa</span>'
+                                : '<span class="small">Aguardando</span>'
+                        }
+                    </td>
+
+                </tr>
+            `;
+
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+    }catch(error){
+
+        container.innerHTML =
+            `<div class="status">
+                Erro ao carregar resultados:
+                ${escapeHtml(error.message)}
+            </div>`;
+
+    }
+
+}
 function escapeHtml(text){
 
 
