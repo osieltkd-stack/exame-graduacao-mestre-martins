@@ -806,7 +806,7 @@ async function loadEvaluatorCandidates(){
 });
 $("saveEvaluationsBtn").onclick =
 saveEvaluations;}
-   async function saveEvaluations(){
+ async function saveEvaluations(){
 
     const button =
         $("saveEvaluationsBtn");
@@ -855,6 +855,194 @@ saveEvaluations;}
             ...new Set(
                 [...inputs].map(
                     input => input.dataset.candidate
+                )
+            )
+        ];
+
+        let savedCount = 0;
+        let pendingCount = 0;
+
+        for(const candidateId of candidatesIds){
+
+            const candidateInputs =
+                document.querySelectorAll(
+                    `.score-input[data-candidate="${candidateId}"]`
+                );
+
+            let complete = true;
+
+            for(const input of candidateInputs){
+
+                if(input.value === ""){
+                    complete = false;
+                    break;
+                }
+
+                const score =
+                    Number(input.value);
+
+                if(
+                    Number.isNaN(score) ||
+                    score < 0 ||
+                    score > 10
+                ){
+                    throw new Error(
+                        "As notas devem estar entre 0 e 10."
+                    );
+                }
+            }
+
+            if(!complete){
+
+                pendingCount++;
+                continue;
+
+            }
+
+            const {data:existingEvaluation,error:findError} =
+                await db
+                .from("evaluations")
+                .select("id,status")
+                .eq("exam_id",exam.id)
+                .eq("candidate_id",candidateId)
+                .eq("evaluator_id",evaluatorId)
+                .maybeSingle();
+
+            if(findError) throw findError;
+
+            let evaluationId;
+
+            if(existingEvaluation){
+
+                evaluationId =
+                    existingEvaluation.id;
+
+            }else{
+
+                const {data:newEvaluation,error:newError} =
+                    await db
+                    .from("evaluations")
+                    .insert({
+                        exam_id:exam.id,
+                        candidate_id:candidateId,
+                        evaluator_id:evaluatorId,
+                        status:"draft"
+                    })
+                    .select("id")
+                    .single();
+
+                if(newError) throw newError;
+
+                evaluationId =
+                    newEvaluation.id;
+            }
+
+            for(const input of candidateInputs){
+
+                const criterionName =
+                    criterionNames[
+                        input.dataset.criterion
+                    ];
+
+                const criterionId =
+                    criteriaMap[criterionName];
+
+                if(!criterionId){
+                    throw new Error(
+                        "Critério não encontrado: " +
+                        criterionName
+                    );
+                }
+
+                const score =
+                    Number(input.value);
+
+                const {data:existingScore,error:scoreFindError} =
+                    await db
+                    .from("scores")
+                    .select("id")
+                    .eq("evaluation_id",evaluationId)
+                    .eq("criterion_id",criterionId)
+                    .maybeSingle();
+
+                if(scoreFindError) throw scoreFindError;
+
+                if(existingScore){
+
+                    const {error:updateError} =
+                        await db
+                        .from("scores")
+                        .update({
+                            score:score,
+                            updated_at:new Date().toISOString()
+                        })
+                        .eq("id",existingScore.id);
+
+                    if(updateError) throw updateError;
+
+                }else{
+
+                    const {error:insertError} =
+                        await db
+                        .from("scores")
+                        .insert({
+                            evaluation_id:evaluationId,
+                            criterion_id:criterionId,
+                            score:score
+                        });
+
+                    if(insertError) throw insertError;
+                }
+            }
+
+            savedCount++;
+        }
+
+        if(savedCount === 0){
+
+            button.textContent =
+                "⚠️ Nenhuma avaliação salva";
+
+            $("evaluatorInfo").textContent =
+                "Nenhum aluno possui as 6 notas preenchidas.";
+
+        }else{
+
+            button.textContent =
+                "✅ Avaliações salvas";
+
+            $("evaluatorInfo").textContent =
+                savedCount +
+                " avaliação(ões) salva(s)." +
+                (pendingCount > 0
+                    ? " " +
+                      pendingCount +
+                      " aguardando preenchimento."
+                    : "");
+
+        }
+
+    }catch(error){
+
+        button.textContent =
+            "❌ Erro ao salvar";
+
+        $("evaluatorInfo").textContent =
+            "Erro ao salvar: " +
+            error.message;
+    }
+
+    setTimeout(() => {
+
+        button.disabled = false;
+
+        button.textContent =
+            "💾 Salvar Avaliações";
+
+    },3000);
+
+}
+
                 )
             )
         ];
