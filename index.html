@@ -308,6 +308,40 @@ Salvar nova senha
 
 
 <!-- SISTEMA -->
+<!-- PAINEL DO EXAMINADOR -->
+<section id="evaluatorApp" class="hidden">
+
+    <div class="card">
+        <div class="toolbar">
+            <div>
+                <h2>👨‍⚖️ Painel do Examinador</h2>
+                <div id="evaluatorExamInfo" class="small">
+                    Exame de Graduação 2026
+                </div>
+            </div>
+
+            <span class="badge">
+                Examinador
+            </span>
+        </div>
+
+        <div class="card">
+            <h3>Ficha de Avaliação</h3>
+
+            <div id="evaluatorInfo" class="small">
+                Carregando examinador...
+            </div>
+
+            <div id="evaluatorCandidates">
+                <div class="status">
+                    Carregando alunos...
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</section>
 <section id="app" class="hidden">
 
 <div class="card">
@@ -1008,13 +1042,17 @@ await db
 if(error) throw error;
 
 
-if(profile.role !== "admin" ||
-!profile.active){
+if(!profile.active){
+    throw new Error(
+        "Este usuário está inativo."
+    );
+}
 
-throw new Error(
-"Este usuário não possui permissão de administrador."
-);
-
+if(profile.role !== "admin" && profile.role !== "evaluator"){
+    throw new Error(
+        "Este usuário não possui permissão de acesso."
+    );
+}
 }
 
 
@@ -1029,8 +1067,17 @@ $("loginCard")
 $("recoveryCard")
 .classList.add("hidden");
 
-$("app")
-.classList.remove("hidden");
+if(profile.role === "admin"){
+
+    $("app")
+    .classList.remove("hidden");
+
+}else if(profile.role === "evaluator"){
+
+    $("evaluatorApp")
+    .classList.remove("hidden");
+
+}
 
 $("logoutBtn")
 .classList.remove("hidden");
