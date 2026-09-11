@@ -1112,9 +1112,9 @@ async function loadAdminResults(){
         const {data:candidates,error:candidatesError} =
             await db
             .from("candidates")
-            .select("id,name,current_gub")
+            .select("id,full_name,current_grade")
             .eq("exam_id",exam.id)
-            .order("name");
+            .order("full_name");
 
         if(candidatesError) throw candidatesError;
 
@@ -1257,12 +1257,12 @@ async function loadAdminResults(){
 
                     <td>
                         <strong>
-                            ${escapeHtml(candidate.name)}
+                            ${escapeHtml(candidate.full_name)}
                         </strong>
                     </td>
 
                     <td>
-                        ${escapeHtml(candidate.current_gub || "")}
+                        ${escapeHtml(candidate.current_grade || "")}
                     </td>
             `;
 
